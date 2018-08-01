@@ -2,11 +2,32 @@ from zc.buildout.download import Download
 import zc.buildout.easy_install
 import ConfigParser
 import multiprocessing as mp
-import sys
 import pkg_resources
 
 
 __author__ = 'Jagadeesh N Malakannavar <mnjagadeesh@gmail.com>'
+
+ws = ''
+dc = ''
+
+
+def parallel_downloads(urls, idc, iindex, processes):
+    global ws
+    global dc
+    dc = idc
+    ws = zc.buildout.easy_install.Installer(dest=idc, index=iindex)
+    pool = mp.Pool(int(processes))
+    pool.map(func=mp_download, iterable=urls)
+    pool.close()
+
+
+def mp_download(url):
+    global ws
+    req = pkg_resources.Requirement.parse([url])
+    pkg = ws._obtain(req)
+    if pkg.location:
+        download = Download(cache=dc)
+        download(pkg.location)
 
 
 class Download_eggs():
@@ -19,8 +40,7 @@ class Download_eggs():
         self.versions = options.get('versions-files')
         self.ed = options.get('eggs-directory')
         self.index = options.get('index', self.url)
-        self.ws = zc.buildout.easy_install.Installer(dest=self.dc,
-                                                     index=self.index)
+        self.processes = options.get('processes', 5)
 
     def read_versions(self):
         urls = []
@@ -29,25 +49,11 @@ class Download_eggs():
         urls = [[i[0] + '==' + i[1]] for i in config.items('versions')]
         return urls
 
-    def mp_download(self, spec):
-        req = pkg_resources.Requirement.parse([spec])
-        a = self.ws._obtain(req)
-        if a.location:
-            download = Download(cache=self.dc)
-            download(a.location)
-
     def install(self):
         urls = self.read_versions()
-        processes = [mp.Process(target=self.mp_download,
-                                args=(x,)) for x in urls]
-        for p in processes:
-            p.daemon = True
-            p.start()
+        parallel_downloads(urls, self.dc, self.index, self.processes)
+        return self.dc
 
-        for p in processes:
-            p.join()
-
-        return None
     update = install
 
 
