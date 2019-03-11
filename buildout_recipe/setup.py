@@ -16,7 +16,7 @@ setup(name='buildout.recipe.download',
           'License :: Other/Proprietary License',
           'Topic :: Software Development :: Build Tools',
           'Topic :: Software Development :: Libraries :: Python Modules',
-         ],
+      ],
       keywords='development buildout recipe',
       author='Jagadeesh N Malakannavar',
       author_email='mnjagadeesh@gmail.com',
@@ -27,5 +27,6 @@ setup(name='buildout.recipe.download',
       include_package_data=True,
       zip_safe=False,
       install_requires=['zc.buildout', 'setuptools', 'ConfigParser'],
-      entry_points= {"zc.buildout": ["default=buildout.recipe.download.download:Download_eggs"]},
-    )
+      entry_points={"zc.buildout": [
+          "default=buildout.recipe.download:Download_eggs"]},
+      )
